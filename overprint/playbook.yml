@@ -1,0 +1,10 @@
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Overprint test
+      command: "false"
+      retries: 5
+      delay: 1
+      register: result
+      until: result.rc == 0
