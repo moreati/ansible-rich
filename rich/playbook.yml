@@ -1,5 +1,5 @@
 #!/usr/bin/env ansible-playbook
-- hosts: localhost
+- hosts: locals
   gather_facts: false
   connection: local
   tasks:

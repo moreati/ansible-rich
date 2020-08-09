@@ -1,0 +1,7 @@
+locals:
+  hosts:
+    local1:
+    local2:
+    local3:
+  vars:
+    connection: local
