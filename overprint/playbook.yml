@@ -1,7 +1,6 @@
 #!/usr/bin/env ansible-playbook
-- hosts: localhost
+- hosts: demo
   gather_facts: false
-  connection: local
   tasks:
     - name: Overprint test
       command: "false"
