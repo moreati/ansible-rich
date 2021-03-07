@@ -2,10 +2,23 @@
 - hosts: locals
   gather_facts: false
   connection: local
+  vars:
+    ansible_python_interpreter: python3
   tasks:
-    - name: Rich test
-      command: "false"
-      retries: 5
-      delay: 1
+    - name: Command
+      command: "true"
       register: result
       until: result.rc == 0
+
+    - name: Retries
+      command: "true"
+      retries: 3
+      delay: 1
+      register: result
+      changed_when: false
+      until: result.attempts == 3
+
+    - name: Loop
+      debug:
+        msg: Hello world!
+      with_sequence: count=2
