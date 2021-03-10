@@ -7,13 +7,18 @@ from ansible import constants as C
 from ansible import context
 from ansible.errors import AnsibleAssertionError
 try:
-    # Ansible >= 2.10.x
+    # Ansible >= 2.9.x
     from ansible_collections.community.general.plugins.callback.yaml import CallbackModule as YAMLCallBackModule
-except ImportError:
-    # Ansible <= 2.9.x
+except (KeyError, ImportError, ModuleNotFoundError):
+    # Ansible < 2.9.x
     from ansible.plugins.callback.yaml import CallbackModule as YAMLCallBackModule
 from ansible.utils.color import colorize, hostcolor
-from ansible.utils.display import Display, color_to_log_level, logger
+try:
+    from ansible.utils.display import color_to_log_level
+except ImportError:
+    def color_to_log_level(color):
+        return logging.ERROR if color == C.COLOR_ERROR else logging.INFO
+from ansible.utils.display import Display, logger
 
 import rich.align
 import rich.box
@@ -81,11 +86,11 @@ class RichDisplay(Display):
         )
 
     @staticmethod
-    def color_to_style(color, default='default'):
+    def color_to_style(color):
         """Convert an Ansible color spec to a rich style.
         """
         if color is None:
-            return default
+            return color
         return color.replace('bright', 'bold')
 
     def display(self, msg, color=None, stderr=False, screen_only=False, log_only=False, newline=True, **kwargs):
@@ -94,7 +99,12 @@ class RichDisplay(Display):
         end = '\n' if newline and not msg.endswith('\n') else ''
 
         if not log_only:
-            console.print(msg, style=style, end=end, **kwargs)
+            if style:
+                msg_escaped = msg.replace('[', r'\[')
+                msg_markup = f"[{style}]{msg_escaped}[/{style}]"
+                console.print(msg_markup, markup=True, end=end, **kwargs)
+            else:
+                console.print(msg, end=end, **kwargs)
 
         if logger and not screen_only:
             log_level = logging.INFO
@@ -128,17 +138,8 @@ class CallbackModule(YAMLCallBackModule):
         super().__init__()
         self._display = RichDisplay()
 
-    @staticmethod
-    def host_spec(result):
-        hostname = result._host.get_name()
-        delegated_vars = result._result.get('_ansible_delegated_vars')
-        if delegated_vars:
-            delegated_hostname = delegated_vars['ansible_host']
-            return f"{hostname} -> {delegated_hostname}"
-        else:
-            return f"{hostname}"
-
     def v2_playbook_on_task_start(self, task, is_conditional):
+        super().v2_playbook_on_task_start(task, is_conditional)
         if task.until:
             self._progress = rich.progress.Progress(
                 '{task.description}',
@@ -147,32 +148,36 @@ class CallbackModule(YAMLCallBackModule):
                 auto_refresh=False,
                 transient=True,
             )
-        super().v2_playbook_on_task_start(task, is_conditional)
+            self._progress.start()
 
     def v2_runner_on_start(self, host, task):
         if task.until:
+            # add_task() always performs a refresh()
             progress_task = self._progress.add_task(host.name, total=task.retries)
             self._progress_tasks[(host.name, task._uuid)] = progress_task
-            self._progress.start()
 
     def v2_runner_retry(self, result):
         progress_task = self._progress_tasks[(result._host.name, result._task._uuid)]
-        self._progress.update(progress_task, advance=1)
+        self._progress.update(progress_task, advance=1, refresh=True)
+
+    def _progress_finish(self, result):
+        total = result._result['attempts']
+        progress_task = self._progress_tasks.pop((result._host.name, result._task._uuid))
+        self._progress.update(progress_task, total=total, refresh=True)
+        # remove_task() does not perform a refresh()
+        self._progress.remove_task(progress_task)
         self._progress.refresh()
+        if not self._progress_tasks:
+            self._progress.stop()
+            self._progress = None
 
     def v2_runner_on_ok(self, result):
-        if self._progress:
-            self._progress.stop()
-            self._progress.refresh()
-
         super().v2_runner_on_ok(result)
+        if self._progress: self._progress_finish(result)
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
-        if self._progress:
-            self._progress.stop()
-            self._progress.refresh()
-
         super().v2_runner_on_failed(result, ignore_errors)
+        if self._progress: self._progress_finish(result)
 
     def v2_playbook_on_stats(self, stats):
         self._display.banner('PLAY RECAP')

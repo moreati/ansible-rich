@@ -1,7 +1,13 @@
 locals:
   hosts:
-    local1:
-    local2:
-    local3:
+    local1: { canary: 1 }
+    local2: { canary: 2 }
+    local3: { canary: 3 }
+    local4: { canary: 4 }
+    local5: { canary: 5 }
+    local6: { canary: 6 }
+    local7: { canary: 7 }
+    local8: { canary: 8 }
+    local9: { canary: 9 }
   vars:
     connection: local
