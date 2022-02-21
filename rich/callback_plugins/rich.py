@@ -145,28 +145,25 @@ class CallbackModule(YAMLCallBackModule):
                 '{task.description}',
                 '{task.completed} of {task.total}',
                 console=self._display.console,
-                auto_refresh=False,
+                auto_refresh=True,
                 transient=True,
             )
             self._progress.start()
 
     def v2_runner_on_start(self, host, task):
         if task.until:
-            # add_task() always performs a refresh()
             progress_task = self._progress.add_task(host.name, total=task.retries)
             self._progress_tasks[(host.name, task._uuid)] = progress_task
 
     def v2_runner_retry(self, result):
         progress_task = self._progress_tasks[(result._host.name, result._task._uuid)]
-        self._progress.update(progress_task, advance=1, refresh=True)
+        self._progress.update(progress_task, advance=1)
 
     def _progress_finish(self, result):
         total = result._result['attempts']
         progress_task = self._progress_tasks.pop((result._host.name, result._task._uuid))
-        self._progress.update(progress_task, total=total, refresh=True)
-        # remove_task() does not perform a refresh()
+        self._progress.update(progress_task, total=total)
         self._progress.remove_task(progress_task)
-        self._progress.refresh()
         if not self._progress_tasks:
             self._progress.stop()
             self._progress = None
