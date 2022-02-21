@@ -10,7 +10,7 @@
 
     - name: Command
       command: "true"
-      retries: 2
+      retries: 4
       delay: 1
       register: result
       until: "false"

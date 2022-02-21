@@ -142,7 +142,8 @@ class CallbackModule(YAMLCallBackModule):
         super().v2_playbook_on_task_start(task, is_conditional)
         if task.until:
             self._progress = rich.progress.Progress(
-                '{task.description}',
+                rich.progress.SpinnerColumn(),
+                '[{task.description}]',
                 '{task.completed} of {task.total}',
                 console=self._display.console,
                 auto_refresh=True,
