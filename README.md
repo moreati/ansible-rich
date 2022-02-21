@@ -2,6 +2,8 @@
 
 Richer output for `ansible-playbook`, using [Rich] by [Will McGugan].
 
+[![](https://asciinema.org/a/vRIFoyfPNHDkOVGnUbEOeVTI2.svg "Demo of moreati.rich.rich callback")](https://asciinema.org/a/vRIFoyfPNHDkOVGnUbEOeVTI2)
+
 ## Installing
 
 Install moreati.rich
