@@ -102,9 +102,9 @@ class RichDisplay(Display):
             if style:
                 msg_escaped = msg.replace('[', r'\[')
                 msg_markup = f"[{style}]{msg_escaped}[/{style}]"
-                console.print(msg_markup, markup=True, end=end, **kwargs)
+                console.print(msg_markup, markup=True, end=end, crop=False, soft_wrap=True, **kwargs)
             else:
-                console.print(msg, end=end, **kwargs)
+                console.print(msg, end=end, crop=False, soft_wrap=True, **kwargs)
 
         if logger and not screen_only:
             log_level = logging.INFO
