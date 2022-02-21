@@ -6,12 +6,6 @@ import logging
 from ansible import constants as C
 from ansible import context
 from ansible.errors import AnsibleAssertionError
-try:
-    # Ansible >= 2.9.x
-    from ansible_collections.community.general.plugins.callback.yaml import CallbackModule as YAMLCallBackModule
-except (KeyError, ImportError, ModuleNotFoundError):
-    # Ansible < 2.9.x
-    from ansible.plugins.callback.yaml import CallbackModule as YAMLCallBackModule
 from ansible.utils.color import colorize, hostcolor
 try:
     from ansible.utils.display import color_to_log_level
@@ -19,6 +13,7 @@ except ImportError:
     def color_to_log_level(color):
         return logging.ERROR if color == C.COLOR_ERROR else logging.INFO
 from ansible.utils.display import Display, logger
+from ansible_collections.community.general.plugins.callback.yaml import CallbackModule as YAMLCallBackModule
 
 import rich.align
 import rich.box
@@ -30,7 +25,7 @@ import rich.theme
 
 
 DOCUMENTATION = '''
-  callback: rich
+  callback: moreati.rich.rich
   callback_type: stdout
   requirements:
     - Set as stdout in config
@@ -128,7 +123,7 @@ class RichDisplay(Display):
 
 
 class CallbackModule(YAMLCallBackModule):
-    CALLBACK_NAME = 'rich'
+    CALLBACK_NAME = 'moreati.rich.rich'
     CALLBACK_TYPE = 'stdout'
     CALLBACK_VERSION = 2.0
 
