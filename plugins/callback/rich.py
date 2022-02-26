@@ -50,10 +50,25 @@ SIMPLER = rich.box.Box(
 )
 
 
+class Console(rich.console.Console):
+    _printed = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def print(self, *args, **kwargs):
+        super().print(*args, **kwargs)
+        self._printed = True
+
+    def banner(self, *args, **kwargs):
+        if self._printed:
+            self.line(1)
+        self.print(*args, **kwargs)
+
+
 class RichDisplay(Display):
     def __init__(self, verbosity=0):
         super().__init__(verbosity=verbosity)
-        self._first_banner = True
         theme = rich.theme.Theme({
             'banner': 'bold',
             'ok': self.color_to_style(C.COLOR_OK),
@@ -66,13 +81,13 @@ class RichDisplay(Display):
             'table.header': 'default',
             'table.footer': 'default',
         })
-        self.console = rich.console.Console(
+        self.console = Console(
             emoji=False,
             highlight=False,
             markup=False,  # Don't interpret [square brackets] as styling
             theme=theme,
         )
-        self.error_console = rich.console.Console(
+        self.error_console = Console(
             emoji=False,
             highlight=False,
             markup=False,  # Don't interpret [square brackets] as styling
@@ -112,14 +127,8 @@ class RichDisplay(Display):
             logger.log(log_level, msg)
 
     def banner(self, msg, color=None):
-        msg = msg.strip()
         style = 'banner' if color is None else self.color_to_style(color)
-        if self._first_banner:
-            self._first_banner = False
-            leader = ''
-        else:
-            leader = '\n'
-        self.console.print(f"{leader}{msg}", style=style)
+        self.console.banner(msg, style=style)
 
 
 class CallbackModule(YAMLCallBackModule):
