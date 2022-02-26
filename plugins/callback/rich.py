@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import datetime
 import logging
 
 from ansible import constants as C
@@ -50,6 +51,16 @@ SIMPLER = rich.box.Box(
 )
 
 
+def timedelta_fmt(td: datetime.timedelta) -> str:
+    hours, rem = divmod(td.seconds, 3600)
+    mins, secs = divmod(rem, 60)
+
+    if td.days: return f'{td.days:2d}d {hours:2d}h'
+    if hours:   return f'{hours:2ds}h {mins:2d}m'
+    if mins:    return f'{mins:2d}m {secs:2d}s'
+    return f'{td.seconds:>7.2f}s'
+
+
 class Console(rich.console.Console):
     _printed = False
 
@@ -71,6 +82,10 @@ class RichDisplay(Display):
         super().__init__(verbosity=verbosity)
         theme = rich.theme.Theme({
             'banner': 'bold',
+            'banner.prefix': 'bold underline on dark_blue',
+            'banner.time': 'dim',
+            'banner.timedelta': 'dim',
+            'banner.title': 'bold',
             'ok': self.color_to_style(C.COLOR_OK),
             'changed': self.color_to_style(C.COLOR_CHANGED),
             'unreachable': self.color_to_style(C.COLOR_UNREACHABLE),
@@ -141,6 +156,26 @@ class CallbackModule(YAMLCallBackModule):
         self._progress_tasks = {}
         super().__init__()
         self._display = RichDisplay()
+
+    def v2_playbook_on_play_start(self, play):
+        self._play = play
+        self._play_start = datetime.datetime.now()
+        prefix = rich.markup.escape('PLAY')
+        name = rich.markup.escape(play.get_name().strip())
+        time = self._play_start
+        text = f'[banner.prefix]{prefix}[/] [banner.time]T={time:%H:%M:%S}[/] [banner.title][{name}][/]'
+        self._display.console.banner(text, markup=True)
+
+    def _print_task_banner(self, task):
+        prefix = rich.markup.escape(self._task_type_cache.get(task._uuid, 'TASK'))
+        if self._last_task_name is not None:
+            name = rich.markup.escape(self._last_task_name)
+        else:
+            name = rich.markup.escape(task.get_name().strip())
+        tdelta = rich.markup.escape(timedelta_fmt(datetime.datetime.now() - self._play_start))
+        text = f'[banner.prefix]{prefix}[/] [banner.timedelta]T+{tdelta:>8}[/] [banner.title][{name}][/]'
+        self._display.console.banner(text, markup=True)
+        self._last_task_banner = task._uuid
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         super().v2_playbook_on_task_start(task, is_conditional)
