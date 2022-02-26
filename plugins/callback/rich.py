@@ -217,7 +217,7 @@ class CallbackModule(YAMLCallBackModule):
         if self._progress: self._progress_finish(result)
 
     def v2_playbook_on_stats(self, stats):
-        self._display.banner('PLAY RECAP')
+        self._display.banner('RECAP')
 
         def cell(v, style, align='right'):
             if v:
@@ -263,7 +263,7 @@ class CallbackModule(YAMLCallBackModule):
                 cell(t['skipped'], style='skipped'),
                 cell(t['rescued'], style='rescued'),
                 cell(t['ignored'], style='ignored'),
-                cell(host_total, style='dim default'),
+                cell(host_total, style='default'),
             )
 
             self._display.display(
@@ -279,7 +279,7 @@ class CallbackModule(YAMLCallBackModule):
                 ),
                 log_only=True
             )
-        table.columns[-1].footer = cell(overall_total, style='dim default')
+        table.columns[-1].footer = cell(overall_total, style='default')
         self._display.console.print(table)
 
         # print custom stats if required
