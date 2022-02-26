@@ -99,13 +99,13 @@ class RichDisplay(Display):
         self.console = Console(
             emoji=False,
             highlight=False,
-            markup=False,  # Don't interpret [square brackets] as styling
+            markup=False,  # Don't interpret [markup]foo[/markup] by default
             theme=theme,
         )
         self.error_console = Console(
             emoji=False,
             highlight=False,
-            markup=False,  # Don't interpret [square brackets] as styling
+            markup=False,  # Don't interpret [markup]foo[/markup] by default
             theme=theme,
             stderr=True,
         )
