@@ -30,7 +30,7 @@ Configure the callback in ansible.cfg
 
 ```ini
 [defaults]
-stdout_callback=moreati.rich
+stdout_callback=moreati.rich.rich
 ```
 
 ## Requirements
