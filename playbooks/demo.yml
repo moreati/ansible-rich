@@ -1,9 +1,28 @@
 #!/usr/bin/env ansible-playbook
-- hosts: locals
+---
+- name: Generate example hosts
+  hosts: localhost
   gather_facts: false
   connection: local
   vars:
     ansible_python_interpreter: python3
+  tasks:
+    - add_host:
+        name: "host{{ item }}"
+        groups:
+          - locals
+        canary: "{{ item }}"
+      loop: "{{ range(1, 6) }}"
+      loop_control:
+        label: "host{{ item }}"
+
+- name: Demonstrate moreati.rich.rich callback
+  hosts: locals
+  gather_facts: false
+  connection: local
+  vars:
+    ansible_python_interpreter: python3
+    canary: "{{ inventory_hostname[4:] }}"
   tasks:
     - name: Echo
       command: "echo foo"
@@ -22,7 +41,7 @@
       delay: 1
       register: result
       changed_when: false
-      until: result.attempts == canary
+      until: result.attempts == canary|int
 
     - name: Loop
       debug:
