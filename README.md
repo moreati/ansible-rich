@@ -41,6 +41,9 @@ moreati.rich requires (on your Ansible controller)
 - Python 3.6+
 - Rich
 
+## License
+
+MIT, see LICENSE file.
 
 [Rich]: https://github.com/Textualize/rich
 [Will McGugan]: https://github.com/willmcgugan

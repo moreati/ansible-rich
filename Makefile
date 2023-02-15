@@ -5,6 +5,9 @@ TARGET := moreati-rich-$(VERSION).tar.gz
 $(TARGET): $(SOURCES)
 	ansible-galaxy collection build --force
 
+
+default: $(TARGET)
+
 .PHONY: clean
 clean:
 	rm -f *.tar.gz
